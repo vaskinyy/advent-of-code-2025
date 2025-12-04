@@ -1,3 +1,4 @@
+from models.board import get_coords_around
 from parsers.input_parser import InputParser
 
 test_mode = False
@@ -5,29 +6,35 @@ test_mode = False
 parser = InputParser(test_mode)
 parser.parse()
 
-lines = [[int(el) for el in item] for item in parser.get_input_lines()]
+parser.build_boards()
 
-sequence_length = 12
+board = parser.get_board()
+items = board.items
+width = board.width
+height = board.height
 
-max_numbers = []
+num_items = 0
 
-len_lines = len(lines)
-for i, line in enumerate(lines):
-    print(f'{i+1}/{len_lines}')
+items_to_remove = [(-1, -1)]
 
-    candidate = []
+while items_to_remove:
+    for (i, j) in items_to_remove:
+        if (i, j) == (-1, -1):
+            continue
+        items[i][j] = "."
+    items_to_remove = []
 
-    start_index = 0
-    for i in range(12):
-        last_index = i - 11
-        if last_index >= 0:
-            last_index = len(line)
-        item = max(line[start_index:last_index])
-        start_index = line.index(item, start_index) + 1
-        candidate.append(item)
+    for i in range(height):
+        for j in range(width):
+            if items[i][j] != "@":
+                continue
+            coords = get_coords_around(i, j, height, width)
+            counter = 0
+            for near_i, near_j in coords:
+                if items[near_i][near_j] == "@":
+                    counter += 1
+            if counter < 4:
+                items_to_remove.append((i, j))
+                num_items += 1
 
-    number = int(''.join([str(el) for el in candidate]))
-    max_numbers.append(number)
-
-print(max_numbers)
-print(sum(max_numbers))
+print(num_items)
